@@ -1,10 +1,14 @@
 package com.allen.customergraphview.utils;
 
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
 
 import com.allen.customergraphview.exception.GraphException;
 import com.allen.customergraphview.model.Floor;
 import com.allen.customergraphview.model.GraphModel;
+import com.allen.customergraphview.model.Link;
 import com.allen.customergraphview.model.Node;
 
 import java.util.List;
@@ -48,9 +52,45 @@ public class CalculateUtil {
         float unitWeightRadius = maxWeightRadius / graphModel.getmMaxWeight();
         //5、计算每一个node的圆的中心点和半径
         calculateNodes(graphModel, unitWeightAngle, rectMaxRadius - maxWeightRadius, centerPoint, unitWeightRadius);
-        //6、设置绘制不同类型的图形画笔的颜色，也就是设置不同楼层数据的颜色
+        //6、计算连接线和连接区域的路径
+        calculateLinkPaths(graphModel,rectMaxRadius,centerPoint);
+        //7、设置绘制不同类型的图形画笔的颜色，也就是设置不同楼层数据的颜色
         setFloorColor(graphModel, defaultColors);
 
+    }
+
+    /**
+     * 计算连接线和连接线点击有效区域的路径
+     */
+    private static void calculateLinkPaths(GraphModel graphModel,float rectMaxRadius, Point centerPoint) {
+        List<Link> links = graphModel.getLinks();
+        // for (Link link : links) {
+        for (int i = 0; i < links.size(); i++) {
+            Link link = links.get(i);
+            Node sourceNode = getNodeFormId(graphModel,link.getSource());
+            Node targetNode = getNodeFormId(graphModel,link.getTarget());
+            if (null == sourceNode || null == targetNode) {
+                return;
+            }
+            Path linkPath = new Path();
+            Point sourcePoint = sourceNode.getCenterPoint();
+            Point targetPoint = targetNode.getCenterPoint();
+            Point point1 = reTransform(centerPoint,angleTransformPoint(rectMaxRadius,sourceNode.getCenterAngle() - 2));
+            Point point2 = reTransform(centerPoint,angleTransformPoint(rectMaxRadius,sourceNode.getCenterAngle() + 2));
+            Point point3 = reTransform(centerPoint,angleTransformPoint(rectMaxRadius,targetNode.getCenterAngle() - 2));
+            Point point4 = reTransform(centerPoint,angleTransformPoint(rectMaxRadius,targetNode.getCenterAngle() + 2));
+            linkPath.moveTo(point1.x, point1.y);
+            linkPath.lineTo(point2.x, point2.y);
+            linkPath.quadTo(centerPoint.x, centerPoint.y, point3.x, point3.y);
+            linkPath.lineTo(point4.x, point4.y);
+            linkPath.quadTo(centerPoint.x, centerPoint.y, point1.x, point1.y);
+            link.setLinkPath(linkPath);
+            Path linePath = new Path();
+            linePath.moveTo(sourcePoint.x,sourcePoint.y);
+            linePath.quadTo(centerPoint.x,centerPoint.y,targetPoint.x,targetPoint.y);
+            link.setLinePath(linePath);
+
+        }
     }
 
     /**
@@ -87,50 +127,6 @@ public class CalculateUtil {
     }
 
     /**
-     * 设置楼层颜色
-     */
-    private static void setFloorColor(GraphModel graphModel, String[] colors) {
-        List<Floor> floors = graphModel.getFloors();
-        for (int i = 0; i < floors.size(); i++) {
-            Floor floor = floors.get(i);
-            floor.setColor(colors[i % colors.length]);
-        }
-
-    }
-
-    /**
-     * 计算每一个节点的圆的中心点和半径
-     *
-     * @param graphModel       节点图数据
-     * @param unitWeightAngle  单位比重的角度
-     * @param rectMaxRadius    最大内切圆的半径
-     * @param centerPoint      View中心点
-     * @param unitWeightRadius 单位比重的角度
-     * @throws GraphException
-     */
-    private static void calculateNodes(GraphModel graphModel, float unitWeightAngle, float rectMaxRadius, Point centerPoint, float unitWeightRadius) throws GraphException {
-        float centerAngle = 0;
-        if (graphModel.getNodes().size() > 0) {
-            List<Node> nodes = graphModel.getNodes();
-            if (null == nodes) {
-                throw new GraphException("nodes 数据为空");
-            }
-            for (int i = 0; i < nodes.size(); i++) {
-                Node node = nodes.get(i);
-                float nodeAngle = unitWeightAngle * node.getSymbolSize();
-                centerAngle += nodeAngle;
-                Point point = angleTransformPoint(rectMaxRadius, centerAngle - nodeAngle / 2);
-                Point nodeCenterPoint = reTransform(centerPoint, point);
-                node.setCenterPoint(nodeCenterPoint);
-                float radius = unitWeightRadius * node.getSymbolSize();
-                node.setRadius(radius);
-                node.setSweepAngle(nodeAngle);
-            }
-
-        }
-    }
-
-    /**
      * 计算数据最大比重和比重之和
      *
      * @param graphModel 节点图的数据
@@ -156,6 +152,71 @@ public class CalculateUtil {
         }
     }
 
+    /**
+     * 计算每一个节点的圆的中心点和半径
+     *
+     * @param graphModel       节点图数据
+     * @param unitWeightAngle  单位比重的角度
+     * @param rectMaxRadius    最大内切圆的半径
+     * @param centerPoint      View中心点
+     * @param unitWeightRadius 单位比重的角度
+     * @throws GraphException
+     */
+    private static void calculateNodes(GraphModel graphModel, float unitWeightAngle, float rectMaxRadius, Point centerPoint, float unitWeightRadius) throws GraphException {
+        float endAngle = 0;
+        if (graphModel.getNodes().size() > 0) {
+            List<Node> nodes = graphModel.getNodes();
+            if (null == nodes) {
+                throw new GraphException("nodes 数据为空");
+            }
+            for (int i = 0; i < nodes.size(); i++) {
+                Node node = nodes.get(i);
+                float nodeAngle = unitWeightAngle * node.getSymbolSize();
+                endAngle += nodeAngle;
+                Point point = angleTransformPoint(rectMaxRadius, endAngle - nodeAngle / 2);
+                Point nodeCenterPoint = reTransform(centerPoint, point);
+                node.setCenterPoint(nodeCenterPoint);
+                float radius = unitWeightRadius * node.getSymbolSize();
+                node.setRadius(radius);
+                node.setStartAngle(endAngle-nodeAngle);
+                node.setCenterAngle(endAngle -nodeAngle / 2);
+                node.setEndAngle(endAngle);
+                node.setSweepAngle(nodeAngle);
+            }
+
+        }
+    }
+
+    /**
+     * 设置楼层颜色
+     */
+    private static void setFloorColor(GraphModel graphModel, String[] colors) {
+        List<Floor> floors = graphModel.getFloors();
+        for (int i = 0; i < floors.size(); i++) {
+            Floor floor = floors.get(i);
+            floor.setColor(colors[i % colors.length]);
+        }
+
+    }
+
+
+    /**
+     * 获取节点通过节点id
+     *
+     * @param graphModel 节点数据
+     * @param source 节点id
+     */
+    private static Node getNodeFormId(GraphModel graphModel,String source) {
+        Node fromNode = null;
+        List<Node> nodes = graphModel.getNodes();
+        for (Node node : nodes) {
+            if (node.getId().equals(source)) {
+                fromNode = node;
+                break;
+            }
+        }
+        return fromNode;
+    }
     /**
      * 以View中心点为右手规则直角坐标系的圆点，计算某个角度对应的坐标点
      *

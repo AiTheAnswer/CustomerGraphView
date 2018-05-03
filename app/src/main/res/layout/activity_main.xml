@@ -8,5 +8,10 @@
        android:id="@+id/graph_view"
        android:layout_width="match_parent"
        android:layout_height="match_parent" />
+    <com.allen.customergraphview.view.NodeGroup
+        android:id="@+id/node_group"
+        android:layout_width="match_parent"
+        android:visibility="gone"
+        android:layout_height="match_parent"/>
 
 </FrameLayout>

@@ -22,8 +22,10 @@ public class Link {
     private String target;
     private String value;
     private LineStyle lineStyle;
-    //连接线的路径，用于判断是否在某个点上
-    private Path path;
+    //连接线的路径
+    private Path linePath;
+    //连接线区域的路径
+    private Path linkPath;
 
     public Object getId() {
         return id;
@@ -89,11 +91,19 @@ public class Link {
         this.lineStyle = lineStyle;
     }
 
-    public Path getPath() {
-        return path;
+    public Path getLinePath() {
+        return linePath;
     }
 
-    public void setPath(Path path) {
-        this.path = path;
+    public void setLinePath(Path linePath) {
+        this.linePath = linePath;
+    }
+
+    public Path getLinkPath() {
+        return linkPath;
+    }
+
+    public void setLinkPath(Path linkPath) {
+        this.linkPath = linkPath;
     }
 }

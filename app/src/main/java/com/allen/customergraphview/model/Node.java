@@ -30,8 +30,14 @@ public class Node {
     private Point centerPoint;
     //圆的路径
     private Path path;
-    //圆的中心点的角度
+    //圆的起始角度
+    private float mStartAngle;
+    //圆的旋转角度的角度
     private float mSweepAngle;
+    //圆的终止角度
+    private float mEndAngle;
+    //圆的中心点的角度
+    private float mCenterAngle;
 
     public Node(String id, String name, int symbolSize, Object source, String category, Object target, Object value, LineStyle lineStyle) {
         this.id = id;
@@ -140,5 +146,30 @@ public class Node {
 
     public void setSweepAngle(float sweepAngle) {
         this.mSweepAngle = sweepAngle;
+    }
+
+    public float getStartAngle() {
+        return mStartAngle;
+    }
+
+    public void setStartAngle(float startAngle) {
+        this.mStartAngle = startAngle;
+    }
+
+
+    public float getEndAngle() {
+        return mEndAngle;
+    }
+
+    public void setEndAngle(float endAngle) {
+        this.mEndAngle = endAngle;
+    }
+
+    public float getCenterAngle() {
+        return mCenterAngle;
+    }
+
+    public void setCenterAngle(float centerAngle) {
+        this.mCenterAngle = centerAngle;
     }
 }

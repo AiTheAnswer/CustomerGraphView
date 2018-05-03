@@ -5,12 +5,14 @@ import android.os.Bundle;
 
 import com.allen.customergraphview.model.GraphModel;
 import com.allen.customergraphview.view.GraphView;
+import com.allen.customergraphview.view.NodeGroup;
 import com.google.gson.Gson;
 
 public class MainActivity extends AppCompatActivity {
 
     private GraphView graphView;
     private GraphModel graphModel;
+    private NodeGroup nodeGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
         initView();
         initData();
         graphView.setData(graphModel);
+        //nodeGroup.setData(graphModel);
     }
 
     private void initData() {
@@ -28,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         graphView = findViewById(R.id.graph_view);
+        nodeGroup = findViewById(R.id.node_group);
 
     }
 

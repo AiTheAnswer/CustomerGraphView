@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.support.annotation.Nullable;
@@ -19,11 +20,13 @@ import android.widget.Toast;
 import com.allen.customergraphview.exception.GraphException;
 import com.allen.customergraphview.model.Floor;
 import com.allen.customergraphview.model.GraphModel;
+import com.allen.customergraphview.model.LineFloor;
 import com.allen.customergraphview.model.Link;
 import com.allen.customergraphview.model.Node;
 import com.allen.customergraphview.utils.CalculateUtil;
 import com.allen.customergraphview.utils.DensityUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,6 +44,8 @@ public class GraphView extends View {
     private int mHeight;
     //圆环的圆心坐标
     private Point mCenterPoint;
+    //节点流程图内容的范围
+    private Rect rect;
     //图例和圆环之间的间隔
     private int legendPadding;
     //图例名称的最大长度
@@ -56,10 +61,20 @@ public class GraphView extends View {
     private GraphModel mGraphModel;
     //绘制节点的画笔
     private Paint mNodePaint;
+    //绘制连接线的画笔
+    private Paint mLinkLinePaint;
     //绘制图例文字的画笔
-    private Paint mLegendPaint;
+    private Paint mLegendTextPaint;
     //View当前的状态
     private TYPE mViewTyp = TYPE.INIT;
+    //图例的单行的高度
+    private float mSingleLegendHeight;
+    //图例总高度
+    private float mLegendHeight;
+    //绘制图例的画笔
+    private Paint mLegendPaint;
+    //所有行图例的集合
+    private List<LineFloor> mLineFloors;
 
     /**
      * View 当前的状态
@@ -91,22 +106,33 @@ public class GraphView extends View {
         //View中心点
         mCenterPoint = new Point();
         //图例和节点之间的间隔
-        legendPadding = DensityUtil.dip2px(mContext, 5);
+        legendPadding = DensityUtil.dip2px(mContext, 2);
         //图例文本的最大长度
-        mLegendMaxTextLength = DensityUtil.dip2px(mContext, 30);
+        mLegendMaxTextLength = DensityUtil.dip2px(mContext, 15);
         //图例文字大小
-        mLegendTextSize = DensityUtil.sp2px(mContext, 13);
+        mLegendTextSize = DensityUtil.sp2px(mContext, 10);
         //绘制节点的画笔
         mNodePaint = new Paint();
         mNodePaint.setAntiAlias(true);
         mNodePaint.setStyle(Paint.Style.FILL);
         mNodePaint.setStrokeWidth(DensityUtil.dip2px(mContext, 1));
         //绘制图例文字的画笔
+        mLegendTextPaint = new Paint();
+        mLegendTextPaint.setAntiAlias(true);
+        mLegendTextPaint.setTextSize(mLegendTextSize);
+        mLegendTextPaint.setColor(Color.WHITE);
+        //绘制连接线的画笔
+        mLinkLinePaint = new Paint();
+        mLinkLinePaint.setAntiAlias(true);
+        mLinkLinePaint.setStyle(Paint.Style.STROKE);
+        mLinkLinePaint.setStrokeWidth(DensityUtil.dip2px(mContext, 2));
+        //单行图例的高度
+        mSingleLegendHeight = DensityUtil.dip2px(mContext, 30);
+        //绘制图例的画笔
         mLegendPaint = new Paint();
         mLegendPaint.setAntiAlias(true);
-        mLegendPaint.setTextSize(mLegendTextSize);
+        mLegendPaint.setTextSize(DensityUtil.sp2px(mContext, 16));
         mLegendPaint.setColor(Color.BLACK);
-
     }
 
     /**
@@ -116,6 +142,7 @@ public class GraphView extends View {
      */
     public void setData(GraphModel graphModel) {
         if (null == graphModel) {
+            return;
             //TODO 暂无数据
         }
         mViewTyp = TYPE.DATA;
@@ -127,9 +154,35 @@ public class GraphView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        drawLegend(canvas);
         drawLinkLine(canvas);
         drawNodes(canvas);
         drawLegendText(canvas);
+
+    }
+
+    /**
+     * 绘制图例 （上面居中）
+     *
+     * @param canvas 画布
+     */
+    private void drawLegend(Canvas canvas) {
+        canvas.drawRect(rect, mLegendPaint);
+        for (LineFloor lineFloor : mLineFloors) {
+            for (Floor floor : lineFloor.getFloors()) {
+                String name = floor.getName();
+                float padding = lineFloor.getPaddingLeftOrRight();
+                float y = mHeight / 2 - mRectMaxRadius - mLegendMaxTextLength - legendPadding - mLegendHeight + floor.getStartY();
+                int rectColorWith = DensityUtil.dip2px(mContext, 10);
+                RectF rectColor = new RectF(padding + rectColorWith + floor.getStartX(), y - rectColorWith, padding + rectColorWith + floor.getStartX() + rectColorWith, y);
+                mLegendPaint.setColor(Color.parseColor(floor.getColor()));
+                canvas.drawRect(rectColor, mLegendPaint);
+                mLegendPaint.setColor(Color.BLACK);
+                canvas.drawText(name, padding + rectColorWith * 3 + floor.getStartX(), y, mLegendPaint);
+            }
+
+        }
+
     }
 
     /**
@@ -140,12 +193,36 @@ public class GraphView extends View {
     private void drawLegendText(Canvas canvas) {
         List<Node> nodes = mGraphModel.getNodes();
         float previousSweepAngle = 3f;
+        float sweepAngleSum = 0;
+        float rotate = 0;
+        boolean isFirst = true;
         for (Node node : nodes) {
             float sweepAngle = node.getSweepAngle();
-            canvas.rotate((sweepAngle + previousSweepAngle) / 2, mCenterPoint.x, mCenterPoint.y);
-            if ((sweepAngle + previousSweepAngle) / 2 > 5) {
-                canvas.drawText(node.getName(), mWidth - mLegendMaxTextLength - (mAllowMaxCircleRadius - node.getRadius()), mHeight / 2, mLegendPaint);
+            sweepAngleSum += (sweepAngle + previousSweepAngle) / 2;
+            if (sweepAngleSum <= 90 || sweepAngleSum >= 270) {
+                if (!isFirst) {
+                    canvas.rotate(180 - rotate, mCenterPoint.x, mCenterPoint.y);
+                    canvas.rotate(rotate + 3, mCenterPoint.x, mCenterPoint.y);
+                    isFirst = true;
+                }
+                canvas.rotate((sweepAngle + previousSweepAngle) / 2, mCenterPoint.x, mCenterPoint.y);
+                canvas.drawText(node.getName(), mWidth - mLegendMaxTextLength - (mAllowMaxCircleRadius - node.getRadius()), mCenterPoint.y, mLegendTextPaint);
+
+            } else if (isFirst) {
+                canvas.rotate(-rotate, mCenterPoint.x, mCenterPoint.y);
+                canvas.rotate(-93, mCenterPoint.x, mCenterPoint.y);
+                canvas.rotate((sweepAngle + previousSweepAngle) / 2, mCenterPoint.x, mCenterPoint.y);
+                Rect rect = new Rect();
+                mLegendTextPaint.getTextBounds(node.getName(), 0, node.getName().length(), rect);
+                canvas.drawText(node.getName(), mLegendMaxTextLength + (mAllowMaxCircleRadius - node.getRadius()) - rect.right, mCenterPoint.y, mLegendTextPaint);
+                isFirst = false;
+            } else {
+                canvas.rotate((sweepAngle + previousSweepAngle) / 2, mCenterPoint.x, mCenterPoint.y);
+                Rect rect = new Rect();
+                mLegendTextPaint.getTextBounds(node.getName(), 0, node.getName().length(), rect);
+                canvas.drawText(node.getName(), mLegendMaxTextLength + (mAllowMaxCircleRadius - node.getRadius()) - rect.right, mCenterPoint.y, mLegendTextPaint);
             }
+            rotate += (sweepAngle + previousSweepAngle) / 2;
             previousSweepAngle = sweepAngle;
         }
     }
@@ -180,17 +257,10 @@ public class GraphView extends View {
             if (null == sourceNode || null == targetNode) {
                 return;
             }
-            Path path = new Path();
-            Point sourcePoint = sourceNode.getCenterPoint();
-            Point targetPoint = targetNode.getCenterPoint();
-            path.moveTo(sourcePoint.x, sourcePoint.y);
-            path.quadTo(mCenterPoint.x, mCenterPoint.y, targetPoint.x, targetPoint.y);
-            link.setPath(path);
+            Path linePath = link.getLinePath();
             String color = getFloorColor(sourceNode.getCategory());
-            mNodePaint.setStyle(Paint.Style.STROKE);
-            mNodePaint.setStrokeWidth(1);
-            mNodePaint.setColor(Color.parseColor(color));
-            canvas.drawPath(path, mNodePaint);
+            mLinkLinePaint.setColor(Color.parseColor(color));
+            canvas.drawPath(linePath, mLinkLinePaint);
         }
     }
 
@@ -233,8 +303,57 @@ public class GraphView extends View {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         mWidth = MeasureSpec.getSize(widthMeasureSpec);
         mHeight = MeasureSpec.getSize(heightMeasureSpec);
+        if (null != mGraphModel) {
+            mLineFloors = new ArrayList<>();
+            float dp25 = DensityUtil.dip2px(mContext, 25);
+            LineFloor wrapLine = new LineFloor();
+            List<Floor> floors = mGraphModel.getFloors();
+            floors.clear();
+            floors.add(new Floor("4F"));
+            floors.add(new Floor("Allen"));
+            floors.add(new Floor("3F"));
+            floors.add(new Floor("2F"));
+            floors.add(new Floor("Iverson"));
+            floors.add(new Floor("1F"));
+            floors.add(new Floor("Ai"));
+            float mLegendSumWidth = 0;
+            int line = 0;
+            for (Floor floor : floors) {
+                Rect rect = new Rect();
+                mLegendTextPaint.getTextBounds(floor.getName(), 0, floor.getName().length(), rect);
+                float width = rect.width() + DensityUtil.dip2px(mContext, 40);
+                float height = rect.height();
+                if (wrapLine.getRowContentWidth() + width <= mWidth - dp25 * 2) {
+                    floor.setLine(line);
+                    floor.setStartX(mLegendSumWidth);
+                    floor.setStartY(mSingleLegendHeight * line + height + (mSingleLegendHeight - height) / 2);
+                    floor.setWidth(width);
+                    wrapLine.addFloor(floor);
+                } else {
+                    mLineFloors.add(wrapLine);
+                    line++;
+                    mLegendSumWidth = 0;
+                    floor.setLine(line);
+                    floor.setStartX(mLegendSumWidth);
+                    floor.setStartY(mSingleLegendHeight * line + height + (mSingleLegendHeight - height) / 2);
+                    floor.setWidth(width);
+                    wrapLine = new LineFloor();
+                    wrapLine.addFloor(floor);
+                }
+                floor.setLineLegendHeight(mSingleLegendHeight);
+                mLegendSumWidth += width;
+            }
+            mLineFloors.add(wrapLine);
+            mLegendHeight = mSingleLegendHeight * (line + 1);
+            for (LineFloor lineFloor : mLineFloors) {
+                lineFloor.setPaddingLeftOrRight((mWidth - lineFloor.getRowContentWidth()) / 2);
+            }
+        }
+
         mCenterPoint.x = mWidth / 2;
         mCenterPoint.y = mHeight / 2;
+        int contentRadius = Math.min(mCenterPoint.x, mCenterPoint.y);
+        rect = new Rect(mWidth / 2 - contentRadius, mHeight / 2 - contentRadius, contentRadius * 2, mHeight / 2 + contentRadius);
         initData();
     }
 
@@ -272,6 +391,7 @@ public class GraphView extends View {
 
     }
 
+
     /**
      * 判断点击点是否在连接线上
      *
@@ -280,7 +400,7 @@ public class GraphView extends View {
     private Link inLinkLine(Point point) {
         List<Link> links = mGraphModel.getLinks();
         for (Link link : links) {
-            if (pointInPath(link.getPath(), point)) {
+            if (pointInPath(link.getLinkPath(), point)) {
                 return link;
             }
         }
