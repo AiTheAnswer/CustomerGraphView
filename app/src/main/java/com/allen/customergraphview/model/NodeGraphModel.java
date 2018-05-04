@@ -7,7 +7,7 @@ import java.util.List;
  *
  * @author Renjy
  */
-public class GraphModel {
+public class NodeGraphModel {
 
     private List<Floor> floors;
     private List<Node> nodes;

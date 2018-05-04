@@ -1,22 +1,23 @@
 package com.allen.customergraphview.view;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.view.View;
+import android.widget.FrameLayout;
 
-import com.allen.customergraphview.model.GraphModel;
+import com.allen.customergraphview.model.NodeGraphModel;
 
 /**
- * 节点图布局
+ * 节点流程图布局（节点图+ MarkerView）
  *
  * @author Renjy
  */
-public class NodeGroup extends LinearLayout {
+public class NodeGroup extends FrameLayout {
     private Context mContext;
-    private LegendView legendView;
-    private GraphView graphView;
+    private NodeView nodeView;
+    private MarkerView markerView;
 
     public NodeGroup(Context context) {
         this(context, null);
@@ -32,17 +33,39 @@ public class NodeGroup extends LinearLayout {
         init();
     }
 
+    /**
+     * 初始化
+     * 添加节点图和MarkerView
+     */
     private void init() {
         removeAllViews();
-        legendView = new LegendView(mContext);
-        graphView = new GraphView(mContext);
-        addView(legendView);
-        addView(graphView);
+        nodeView = new NodeView(mContext);
+        markerView = new MarkerView(mContext);
+        markerView.setVisibility(View.GONE);
+        addView(nodeView);
+        addView(markerView);
     }
 
-    public void setData(GraphModel graphModel) {
-        legendView.setData(graphModel);
-        graphView.setData(graphModel);
+    /**
+     * 设置节点图的数据
+     *
+     * @param nodeGraphModel 节点流程图的数据
+     */
+    public void setData(NodeGraphModel nodeGraphModel) {
+        nodeView.setData(nodeGraphModel);
         invalidate();
+    }
+
+    /**
+     * 显示MarkerView
+     *
+     * @param point      点击的屏幕的位置点
+     * @param width      节点图的宽度
+     * @param height     节点图的高度
+     * @param markerText markerView 要显示的文本
+     */
+    public void showMarkView(Point point, int width, int height, String markerText) {
+        markerView.setVisibility(View.GONE);
+        markerView.refreshContent(point, width, height, markerText);
     }
 }

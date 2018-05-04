@@ -3,15 +3,14 @@ package com.allen.customergraphview;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import com.allen.customergraphview.model.GraphModel;
-import com.allen.customergraphview.view.GraphView;
+import com.allen.customergraphview.model.NodeGraphModel;
+import com.allen.customergraphview.view.NodeView;
 import com.allen.customergraphview.view.NodeGroup;
 import com.google.gson.Gson;
 
 public class MainActivity extends AppCompatActivity {
 
-    private GraphView graphView;
-    private GraphModel graphModel;
+    private NodeGraphModel nodeGraphModel;
     private NodeGroup nodeGroup;
 
     @Override
@@ -20,17 +19,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initView();
         initData();
-        graphView.setData(graphModel);
-        //nodeGroup.setData(graphModel);
+        nodeGroup.setData(nodeGraphModel);
     }
 
     private void initData() {
         Gson gson = new Gson();
-        graphModel = gson.fromJson(graphData, GraphModel.class);
+        nodeGraphModel = gson.fromJson(graphData, NodeGraphModel.class);
     }
 
     private void initView() {
-        graphView = findViewById(R.id.graph_view);
+        //graphView = findViewById(R.id.graph_view);
         nodeGroup = findViewById(R.id.node_group);
 
     }

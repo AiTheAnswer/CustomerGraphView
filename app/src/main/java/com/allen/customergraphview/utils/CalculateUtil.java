@@ -1,13 +1,11 @@
 package com.allen.customergraphview.utils;
 
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 
 import com.allen.customergraphview.exception.GraphException;
 import com.allen.customergraphview.model.Floor;
-import com.allen.customergraphview.model.GraphModel;
+import com.allen.customergraphview.model.NodeGraphModel;
 import com.allen.customergraphview.model.Link;
 import com.allen.customergraphview.model.Node;
 
@@ -28,47 +26,47 @@ public class CalculateUtil {
     /**
      * 计算节点图的相关数据
      *
-     * @param graphModel     节点图数据
+     * @param nodeGraphModel     节点图数据
      * @param rectMaxRadius  最大内切圆的半径
      * @param allowMaxRadius 允许半径的最大值
      * @param centerPoint    View的中心点
      */
-    public static void calculateData(GraphModel graphModel, float rectMaxRadius, float allowMaxRadius, Point centerPoint) throws GraphException {
+    public static void calculateData(NodeGraphModel nodeGraphModel, float rectMaxRadius, float allowMaxRadius, Point centerPoint) throws GraphException {
         //1、先计算比重
-        calculateWeight(graphModel);
+        calculateWeight(nodeGraphModel);
         //2、计算单位比重所占角度
-        if (graphModel.getmWeightSum() <= 0 || graphModel.getmMaxWeight() <= 0) {
+        if (nodeGraphModel.getmWeightSum() <= 0 || nodeGraphModel.getmMaxWeight() <= 0) {
             throw new GraphException("数据比重值错误,比重总和小于0");
         }
-        float unitWeightAngle = 360.0f / graphModel.getmWeightSum();
+        float unitWeightAngle = 360.0f / nodeGraphModel.getmWeightSum();
         //3、计算最大比重圆的半径（和允许最大值的半径进行比较取二者较小值）
         float maxWeightRadius;
-        if (unitWeightAngle * graphModel.getmMaxWeight() > 36) {
+        if (unitWeightAngle * nodeGraphModel.getmMaxWeight() > 36) {
             maxWeightRadius = allowMaxRadius;
         } else {
-            maxWeightRadius = (float) (rectMaxRadius * Math.sin(unitWeightAngle * graphModel.getmMaxWeight()) / (1 + 2 * Math.sin(unitWeightAngle * graphModel.getmMaxWeight())));
+            maxWeightRadius = (float) (rectMaxRadius * Math.sin(unitWeightAngle * nodeGraphModel.getmMaxWeight()) / (1 + 2 * Math.sin(unitWeightAngle * nodeGraphModel.getmMaxWeight())));
         }
         //4、计算单位比重圆的半径
-        float unitWeightRadius = maxWeightRadius / graphModel.getmMaxWeight();
+        float unitWeightRadius = maxWeightRadius / nodeGraphModel.getmMaxWeight();
         //5、计算每一个node的圆的中心点和半径
-        calculateNodes(graphModel, unitWeightAngle, rectMaxRadius - maxWeightRadius, centerPoint, unitWeightRadius);
+        calculateNodes(nodeGraphModel, unitWeightAngle, rectMaxRadius - maxWeightRadius, centerPoint, unitWeightRadius);
         //6、计算连接线和连接区域的路径
-        calculateLinkPaths(graphModel,rectMaxRadius,centerPoint);
+        calculateLinkPaths(nodeGraphModel,rectMaxRadius,centerPoint);
         //7、设置绘制不同类型的图形画笔的颜色，也就是设置不同楼层数据的颜色
-        setFloorColor(graphModel, defaultColors);
+        setFloorColor(nodeGraphModel, defaultColors);
 
     }
 
     /**
      * 计算连接线和连接线点击有效区域的路径
      */
-    private static void calculateLinkPaths(GraphModel graphModel,float rectMaxRadius, Point centerPoint) {
-        List<Link> links = graphModel.getLinks();
+    private static void calculateLinkPaths(NodeGraphModel nodeGraphModel, float rectMaxRadius, Point centerPoint) {
+        List<Link> links = nodeGraphModel.getLinks();
         // for (Link link : links) {
         for (int i = 0; i < links.size(); i++) {
             Link link = links.get(i);
-            Node sourceNode = getNodeFormId(graphModel,link.getSource());
-            Node targetNode = getNodeFormId(graphModel,link.getTarget());
+            Node sourceNode = getNodeFormId(nodeGraphModel,link.getSource());
+            Node targetNode = getNodeFormId(nodeGraphModel,link.getTarget());
             if (null == sourceNode || null == targetNode) {
                 return;
             }
@@ -96,46 +94,46 @@ public class CalculateUtil {
     /**
      * 计算节点图的相关数据
      *
-     * @param graphModel     节点图数据
+     * @param nodeGraphModel     节点图数据
      * @param rectMaxRadius  最大内切圆的半径
      * @param allowMaxRadius 允许半径的最大值
      * @param centerPoint    View的中心点
      * @param colors         不同类型的颜色
      */
-    public static void calculateData(GraphModel graphModel, float rectMaxRadius, float allowMaxRadius, Point centerPoint, String[] colors) throws GraphException {
+    public static void calculateData(NodeGraphModel nodeGraphModel, float rectMaxRadius, float allowMaxRadius, Point centerPoint, String[] colors) throws GraphException {
         //1、先计算比重
-        calculateWeight(graphModel);
+        calculateWeight(nodeGraphModel);
         //2、计算单位比重所占角度
-        if (graphModel.getmWeightSum() <= 0 || graphModel.getmMaxWeight() <= 0) {
+        if (nodeGraphModel.getmWeightSum() <= 0 || nodeGraphModel.getmMaxWeight() <= 0) {
             throw new GraphException("数据比重值错误,比重总和小于0");
         }
-        float unitWeightAngle = 360.0f / graphModel.getmWeightSum();
+        float unitWeightAngle = 360.0f / nodeGraphModel.getmWeightSum();
         //3、计算最大比重圆的半径（和允许最大值的半径进行比较取二者较小值）
-        float maxWeightRadius = (float) (2 * Math.PI * rectMaxRadius / graphModel.getmWeightSum());
+        float maxWeightRadius = (float) (2 * Math.PI * rectMaxRadius / nodeGraphModel.getmWeightSum());
         maxWeightRadius = Math.min(maxWeightRadius, allowMaxRadius);
         //4、计算单位比重圆的半径
-        float unitWeightRadius = maxWeightRadius / graphModel.getmMaxWeight();
+        float unitWeightRadius = maxWeightRadius / nodeGraphModel.getmMaxWeight();
         //5、计算每一个node的圆的中心点和半径
-        calculateNodes(graphModel, unitWeightAngle, rectMaxRadius, centerPoint, unitWeightRadius);
+        calculateNodes(nodeGraphModel, unitWeightAngle, rectMaxRadius, centerPoint, unitWeightRadius);
         //6、设置绘制不同类型的图形画笔的颜色，也就是设置不同楼层数据的颜色
         if (null == colors) {
             colors = defaultColors;
         } else if (colors.length < 1) {
             colors = defaultColors;
         }
-        setFloorColor(graphModel, colors);
+        setFloorColor(nodeGraphModel, colors);
     }
 
     /**
      * 计算数据最大比重和比重之和
      *
-     * @param graphModel 节点图的数据
+     * @param nodeGraphModel 节点图的数据
      */
-    private static void calculateWeight(GraphModel graphModel) throws GraphException {
+    private static void calculateWeight(NodeGraphModel nodeGraphModel) throws GraphException {
         int weightSum = 0;
         int maxWeight = 0;
-        if (null != graphModel) {
-            List<Node> nodes = graphModel.getNodes();
+        if (null != nodeGraphModel) {
+            List<Node> nodes = nodeGraphModel.getNodes();
             if (null != nodes && nodes.size() > 0) {
                 for (Node node : nodes) {
                     int symbolSize = node.getSymbolSize();
@@ -145,8 +143,8 @@ public class CalculateUtil {
                     }
                 }
             }
-            graphModel.setmWeightSum(weightSum);
-            graphModel.setmMaxWeight(maxWeight);
+            nodeGraphModel.setmWeightSum(weightSum);
+            nodeGraphModel.setmMaxWeight(maxWeight);
         } else {
             throw new GraphException("数据为空");
         }
@@ -155,17 +153,17 @@ public class CalculateUtil {
     /**
      * 计算每一个节点的圆的中心点和半径
      *
-     * @param graphModel       节点图数据
+     * @param nodeGraphModel       节点图数据
      * @param unitWeightAngle  单位比重的角度
      * @param rectMaxRadius    最大内切圆的半径
      * @param centerPoint      View中心点
      * @param unitWeightRadius 单位比重的角度
      * @throws GraphException
      */
-    private static void calculateNodes(GraphModel graphModel, float unitWeightAngle, float rectMaxRadius, Point centerPoint, float unitWeightRadius) throws GraphException {
+    private static void calculateNodes(NodeGraphModel nodeGraphModel, float unitWeightAngle, float rectMaxRadius, Point centerPoint, float unitWeightRadius) throws GraphException {
         float endAngle = 0;
-        if (graphModel.getNodes().size() > 0) {
-            List<Node> nodes = graphModel.getNodes();
+        if (nodeGraphModel.getNodes().size() > 0) {
+            List<Node> nodes = nodeGraphModel.getNodes();
             if (null == nodes) {
                 throw new GraphException("nodes 数据为空");
             }
@@ -190,8 +188,8 @@ public class CalculateUtil {
     /**
      * 设置楼层颜色
      */
-    private static void setFloorColor(GraphModel graphModel, String[] colors) {
-        List<Floor> floors = graphModel.getFloors();
+    private static void setFloorColor(NodeGraphModel nodeGraphModel, String[] colors) {
+        List<Floor> floors = nodeGraphModel.getFloors();
         for (int i = 0; i < floors.size(); i++) {
             Floor floor = floors.get(i);
             floor.setColor(colors[i % colors.length]);
@@ -203,12 +201,12 @@ public class CalculateUtil {
     /**
      * 获取节点通过节点id
      *
-     * @param graphModel 节点数据
+     * @param nodeGraphModel 节点数据
      * @param source 节点id
      */
-    private static Node getNodeFormId(GraphModel graphModel,String source) {
+    private static Node getNodeFormId(NodeGraphModel nodeGraphModel, String source) {
         Node fromNode = null;
-        List<Node> nodes = graphModel.getNodes();
+        List<Node> nodes = nodeGraphModel.getNodes();
         for (Node node : nodes) {
             if (node.getId().equals(source)) {
                 fromNode = node;
