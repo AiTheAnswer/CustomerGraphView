@@ -297,17 +297,33 @@ public class NodeView extends ScaleView {
         }
     }
 
+    float downX = 0;
+    float downY = 0;
+    Point point = new Point();
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                Point point = new Point();
-                point.x = (int) event.getX();
-                point.y = (int) event.getY();
+                downX = event.getX();
+                downY = event.getY();
+                point.x = downX;
+                point.y = downY;
                 onActionDown(point);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                float upX = event.getX();
+                float upY = event.getY();
+                if ((upX - downX) > 20 || (upY - downY) > 20) {
+                    if (null == nodeGroup) {
+                        nodeGroup = (NodeGroup) getParent();
+                    }
+                    nodeGroup.hideMarkerView();
+                }
                 break;
 
         }
+
         return true;
     }
 
