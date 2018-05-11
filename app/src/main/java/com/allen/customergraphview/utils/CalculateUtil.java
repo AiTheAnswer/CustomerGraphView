@@ -1,13 +1,13 @@
 package com.allen.customergraphview.utils;
 
 import android.graphics.Path;
-import android.graphics.Point;
 
 import com.allen.customergraphview.exception.GraphException;
 import com.allen.customergraphview.model.Floor;
 import com.allen.customergraphview.model.NodeGraphModel;
 import com.allen.customergraphview.model.Link;
 import com.allen.customergraphview.model.Node;
+import com.allen.customergraphview.view.Point;
 
 import java.util.List;
 

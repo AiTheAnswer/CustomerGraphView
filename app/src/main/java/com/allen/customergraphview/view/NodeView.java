@@ -5,27 +5,21 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
-import android.view.View;
 
 import com.allen.customergraphview.exception.GraphException;
 import com.allen.customergraphview.model.Floor;
 import com.allen.customergraphview.model.NodeGraphModel;
-import com.allen.customergraphview.model.LineFloor;
 import com.allen.customergraphview.model.Link;
 import com.allen.customergraphview.model.Node;
 import com.allen.customergraphview.utils.CalculateUtil;
 import com.allen.customergraphview.utils.DensityUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,7 +27,7 @@ import java.util.List;
  *
  * @author Renjy
  */
-public class NodeView extends View {
+public class NodeView extends ScaleView {
     private Context mContext;
     private String[] colors = {"#FBB367", "#80B1D2", "#FB8070", "#CC99FF", "#B0D961",
             "#99CCCC", "#BEBBD8", "#FFCC99", "#8DD3C8", "#FF9999",
@@ -46,7 +40,7 @@ public class NodeView extends View {
     //圆环的圆心坐标
     private Point mCenterPoint;
     //节点流程图内容的范围
-    private Rect rect;
+    private RectF rectF;
     //图例和圆环之间的间隔
     private int legendPadding;
     //图例名称的最大长度
@@ -67,20 +61,14 @@ public class NodeView extends View {
     private Paint mLegendTextPaint;
     //View当前的状态
     private TYPE mViewTyp = TYPE.INIT;
-    //图例的单行的高度
-    private float mSingleLegendHeight;
-    //图例总高度
-    private float mLegendHeight;
     //绘制图例的画笔
     private Paint mLegendPaint;
-    //所有行图例的集合
-    private List<LineFloor> mLineFloors;
     //图例和内容区域之间的间隔
     private int mLegendPaddingBottom;
-    //图例之间的间隔
-    private int mLegendPadding;
     //节点流程图的父容器
     private NodeGroup nodeGroup;
+    //画布缩放平移后显示的区域
+    private Rect clipBounds;
 
     /**
      * View 当前的状态
@@ -132,17 +120,8 @@ public class NodeView extends View {
         mLinkLinePaint.setAntiAlias(true);
         mLinkLinePaint.setStyle(Paint.Style.STROKE);
         mLinkLinePaint.setStrokeWidth(DensityUtil.dip2px(mContext, 2));
-        //单行图例的高度
-        mSingleLegendHeight = DensityUtil.dip2px(mContext, 30);
-        //绘制图例的画笔
-        mLegendPaint = new Paint();
-        mLegendPaint.setAntiAlias(true);
-        mLegendPaint.setTextSize(DensityUtil.sp2px(mContext, 16));
-        mLegendPaint.setColor(Color.BLACK);
         //图例和内容之间的间隔
         mLegendPaddingBottom = DensityUtil.dip2px(mContext, 15);
-        //图例之间的间隔
-        mLegendPadding = DensityUtil.dip2px(mContext, 40);
     }
 
     @Override
@@ -151,94 +130,22 @@ public class NodeView extends View {
         //View 的宽高
         mWidth = MeasureSpec.getSize(widthMeasureSpec);
         mHeight = MeasureSpec.getSize(heightMeasureSpec);
-        //计算绘制图例所需的数据
-        calculateLegend();
         //计算节点图的中心点
         mCenterPoint.x = mWidth / 2;
-        mCenterPoint.y = (int) ((mHeight + mLegendHeight + mLegendPaddingBottom) / 2);
-        int contentRadius = Math.min(mCenterPoint.x, mHeight - mCenterPoint.y);
+        mCenterPoint.y = (mHeight + mLegendPaddingBottom) / 2;
+        float contentRadius = Math.min(mCenterPoint.x, mHeight - mCenterPoint.y);
         //计算节点图的内容区域
-        rect = new Rect(mCenterPoint.x - contentRadius, mCenterPoint.y - contentRadius, mCenterPoint.x + contentRadius, mCenterPoint.y + contentRadius);
+        rectF = new RectF(mCenterPoint.x - contentRadius, mCenterPoint.y - contentRadius, mCenterPoint.x + contentRadius, mCenterPoint.y + contentRadius);
         initData();
-    }
-
-    /**
-     * 计算绘制图例所需的数据
-     */
-    private void calculateLegend() {
-        float dp15 = DensityUtil.dip2px(mContext, 15);
-        if (null != mNodeGraphModel) {
-            mLineFloors = new ArrayList<>();
-            LineFloor wrapLine = new LineFloor();
-            List<Floor> floors = mNodeGraphModel.getFloors();
-            float mLegendSumWidth = 0;
-            int line = 0;
-            for (Floor floor : floors) {
-                Rect rect = new Rect();
-                mLegendPaint.getTextBounds(floor.getName(), 0, floor.getName().length(), rect);
-                float width = rect.width() + mLegendPadding;
-                float height = rect.height();
-                if (wrapLine.getRowContentWidth() + width <= mWidth - dp15 * 2) {
-                    floor.setLine(line);
-                    floor.setStartX(mLegendSumWidth);
-                    floor.setStartY(mSingleLegendHeight * line + height + (mSingleLegendHeight - height) / 2);
-                    floor.setWidth(width);
-                    wrapLine.addFloor(floor);
-                } else {
-                    mLineFloors.add(wrapLine);
-                    line++;
-                    mLegendSumWidth = 0;
-                    floor.setLine(line);
-                    floor.setStartX(mLegendSumWidth);
-                    floor.setStartY(mSingleLegendHeight * line + height + (mSingleLegendHeight - height) / 2);
-                    floor.setWidth(width);
-                    wrapLine = new LineFloor();
-                    wrapLine.addFloor(floor);
-                }
-                floor.setLineLegendHeight(mSingleLegendHeight);
-                mLegendSumWidth += width;
-            }
-            mLineFloors.add(wrapLine);
-            mLegendHeight = mSingleLegendHeight * (line + 1);
-            for (LineFloor lineFloor : mLineFloors) {
-                lineFloor.setPaddingLeftOrRight((mWidth - lineFloor.getRowContentWidth()) / 2);
-            }
-        }
-
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        drawLegend(canvas);
+        clipBounds = canvas.getClipBounds();
         drawLinkLine(canvas);
         drawNodes(canvas);
         drawLegendText(canvas);
-
-    }
-
-    /**
-     * 绘制图例 （上面居中）
-     *
-     * @param canvas 画布
-     */
-    private void drawLegend(Canvas canvas) {
-        //绘制内容区域
-        //canvas.drawRect(rect, mLegendPaint);
-        for (LineFloor lineFloor : mLineFloors) {
-            for (Floor floor : lineFloor.getFloors()) {
-                String name = floor.getName();
-                float padding = lineFloor.getPaddingLeftOrRight();
-                float y = mCenterPoint.y - mRectMaxRadius - mLegendMaxTextLength - legendPadding - mLegendHeight - mLegendPaddingBottom + floor.getStartY();
-                int rectColorWith = DensityUtil.dip2px(mContext, 10);
-                RectF rectColor = new RectF(padding + rectColorWith + floor.getStartX(), y - rectColorWith, padding + rectColorWith + floor.getStartX() + rectColorWith, y);
-                mLegendPaint.setColor(Color.parseColor(floor.getColor()));
-                canvas.drawRect(rectColor, mLegendPaint);
-                mLegendPaint.setColor(Color.BLACK);
-                canvas.drawText(name, padding + rectColorWith * 3 + floor.getStartX(), y, mLegendPaint);
-            }
-
-        }
 
     }
 
@@ -248,8 +155,10 @@ public class NodeView extends View {
      * @param canvas 画布
      */
     private void drawLegendText(Canvas canvas) {
+        float scale = getScale();
+        mLegendTextPaint.setTextSize(Math.max(mLegendTextSize / scale, 1));
         List<Node> nodes = mNodeGraphModel.getNodes();
-        float previousSweepAngle = 3f;
+        float previousSweepAngle = 3;
         float sweepAngleSum = 0;
         float rotate = 0;
         boolean isFirst = true;
@@ -265,19 +174,19 @@ public class NodeView extends View {
                     isFirst = true;
                 }
                 canvas.rotate((sweepAngle + previousSweepAngle) / 2, mCenterPoint.x, mCenterPoint.y);
-                canvas.drawText(node.getName(), rect.right - mLegendMaxTextLength - (mAllowMaxCircleRadius - node.getRadius()), mCenterPoint.y, mLegendTextPaint);
+                canvas.drawText(node.getName(), rectF.right - mLegendMaxTextLength - (mAllowMaxCircleRadius - node.getRadius()), mCenterPoint.y, mLegendTextPaint);
 
             } else if (isFirst) {//左半圆区域第一个
                 canvas.rotate(-rotate, mCenterPoint.x, mCenterPoint.y);
                 canvas.rotate(-93, mCenterPoint.x, mCenterPoint.y);
                 canvas.rotate((sweepAngle + previousSweepAngle) / 2, mCenterPoint.x, mCenterPoint.y);
 
-                canvas.drawText(node.getName(), rect.left + mLegendMaxTextLength + (mAllowMaxCircleRadius - node.getRadius()) - textRect.right, mCenterPoint.y, mLegendTextPaint);
+                canvas.drawText(node.getName(), rectF.left + mLegendMaxTextLength + (mAllowMaxCircleRadius - node.getRadius()) - textRect.right, mCenterPoint.y, mLegendTextPaint);
                 isFirst = false;
             } else {//左半圆区域
                 canvas.rotate((sweepAngle + previousSweepAngle) / 2, mCenterPoint.x, mCenterPoint.y);
 
-                canvas.drawText(node.getName(), rect.left + mLegendMaxTextLength + (mAllowMaxCircleRadius - node.getRadius()) - textRect.right, mCenterPoint.y, mLegendTextPaint);
+                canvas.drawText(node.getName(), rectF.left + mLegendMaxTextLength + (mAllowMaxCircleRadius - node.getRadius()) - textRect.right, mCenterPoint.y, mLegendTextPaint);
             }
             rotate += (sweepAngle + previousSweepAngle) / 2;
             previousSweepAngle = sweepAngle;
@@ -376,7 +285,7 @@ public class NodeView extends View {
      */
     private void initData() {
         //最大内切圆的半径
-        mRectMaxRadius = rect.width() / 2 - mLegendMaxTextLength - legendPadding;
+        mRectMaxRadius = rectF.width() / 2 - mLegendMaxTextLength - legendPadding;
         //允许比重最大圆的半径 = 36度 内切圆的周长 /4
         mAllowMaxCircleRadius = (float) (mRectMaxRadius * (Math.sin(Math.PI / 10) / (1 + 2 * Math.sin(Math.PI / 10))));
         if (mViewTyp == TYPE.DATA) {
@@ -384,9 +293,6 @@ public class NodeView extends View {
                 CalculateUtil.calculateData(mNodeGraphModel, mRectMaxRadius, mAllowMaxCircleRadius, mCenterPoint);
             } catch (GraphException e) {
                 e.printStackTrace();
-                if (TextUtils.isEmpty(e.getMessage())) {
-                    Log.e("GraphView", e.getMessage());
-                }
             }
         }
     }
@@ -400,8 +306,9 @@ public class NodeView extends View {
                 point.y = (int) event.getY();
                 onActionDown(point);
                 break;
+
         }
-        return super.onTouchEvent(event);
+        return true;
     }
 
     /**
@@ -410,24 +317,39 @@ public class NodeView extends View {
      * @param point 点击的点
      */
     private void onActionDown(Point point) {
+        //将屏幕上点击的物理点坐标转换为画布缩放平移后显示对应的点
+        Point pointToScaleCanvas = switchPointToScaleCanvas(point);
         if (null == nodeGroup) {
             nodeGroup = (NodeGroup) getParent();
         }
-        Node node = inNodeCircle(point);
+        Node node = inNodeCircle(pointToScaleCanvas);
         if (node != null) {
             nodeGroup.showMarkView(point, mWidth, mHeight, node.getName());
             return;
         }
-        Link link = inLinkLine(point);
+        Link link = inLinkLine(pointToScaleCanvas);
         if (link != null) {
             Node sourceNode = getNodeFormId(link.getSource());
             Node targetNode = getNodeFormId(link.getTarget());
             nodeGroup.showMarkView(point, mWidth, mHeight, sourceNode.getName() + " > " + targetNode.getName() + " " + link.getValue());
             return;
         }
+        nodeGroup.hideMarkerView();
 
     }
 
+    /**
+     * 将物理点击的点坐标转换为画布缩放平移后的点
+     *
+     * @param point 点击的点
+     * @return 装换后的点
+     */
+    private Point switchPointToScaleCanvas(Point point) {
+        Point switchPoint = new Point();
+        switchPoint.x = (clipBounds.width() * 1f / mWidth) * point.x + clipBounds.left;
+        switchPoint.y = (clipBounds.height() * 1f / mHeight) * point.y + clipBounds.top;
+        return switchPoint;
+    }
 
     /**
      * 判断点击点是否在连接线上
@@ -472,7 +394,7 @@ public class NodeView extends View {
         path.computeBounds(bounds, true);
         Region region = new Region();
         region.setPath(path, new Region((int) bounds.left, (int) bounds.top, (int) bounds.right, (int) bounds.bottom));
-        return region.contains(point.x, point.y);
+        return region.contains((int) point.x, (int) point.y);
     }
 
 }

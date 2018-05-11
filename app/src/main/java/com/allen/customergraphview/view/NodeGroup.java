@@ -1,11 +1,11 @@
 package com.allen.customergraphview.view;
 
 import android.content.Context;
-import android.graphics.Point;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 
 import com.allen.customergraphview.model.NodeGraphModel;
 
@@ -18,6 +18,8 @@ public class NodeGroup extends FrameLayout {
     private Context mContext;
     private NodeView nodeView;
     private MarkerView markerView;
+    //图例的高度
+    private int legendHeight;
 
     public NodeGroup(Context context) {
         this(context, null);
@@ -46,6 +48,7 @@ public class NodeGroup extends FrameLayout {
         addView(markerView);
     }
 
+
     /**
      * 设置节点图的数据
      *
@@ -67,5 +70,12 @@ public class NodeGroup extends FrameLayout {
     public void showMarkView(Point point, int width, int height, String markerText) {
         markerView.setVisibility(View.GONE);
         markerView.refreshContent(point, width, height, markerText);
+    }
+
+    /**
+     * 隐藏MarkerView
+     */
+    public void hideMarkerView() {
+        markerView.hide();
     }
 }

@@ -3,7 +3,6 @@ package com.allen.customergraphview.view;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.graphics.Point;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RelativeLayout;
@@ -89,27 +88,31 @@ public class MarkerView extends RelativeLayout {
      * @param height View的高度
      */
     private void moveMarkerView(Point point, int width, int height) {
-        int offsetX;
-        int offsetY;
+        float offsetX;
+        float offsetY;
         int measuredWidth = this.getMeasuredWidth();
         int measuredHeight = this.getMeasuredHeight();
-        int markerViewMargin = DensityUtil.dip2px(mContext, 10);
+        int markerViewMargin = DensityUtil.dip2px(mContext, 5);
         //计算x轴的偏移量
-        if (point.x + measuredWidth / 2 > width - markerViewMargin) {//判断markerView的右边
-            offsetX = width - markerViewMargin - measuredWidth;
-        } else if (point.x - measuredWidth / 2 < markerViewMargin) { //判断MarkerView的左边
-            offsetX = markerViewMargin;
+        if (point.x + measuredWidth > width - markerViewMargin) {//判断markerView的右边
+            offsetX = (int) (point.x - measuredWidth);
         } else {
-            offsetX = point.x - measuredWidth / 2;
+            offsetX = (int) point.x;
         }
 
         //计算y轴的偏移量
-        if (point.y < measuredHeight / 2 + markerViewMargin) {//计算上边
-            offsetY = measuredHeight / 2 + markerViewMargin;
-        } else if (point.y + measuredHeight / 2 > height - markerViewMargin) {//计算下边
-            offsetY = height - markerViewMargin - measuredHeight / 2;
+        if (point.y < (measuredHeight / 2 + markerViewMargin)) {//计算上边
+            offsetY = markerViewMargin;
+        } else if ((point.y + measuredHeight / 2) < (height - markerViewMargin)) {//计算下边
+            offsetY = (int) (point.y - measuredHeight / 2);
         } else {
-            offsetY = point.y - measuredHeight / 2;
+            offsetY = height - markerViewMargin - measuredHeight;
+        }
+        if (offsetX < markerViewMargin) {
+            offsetX = markerViewMargin;
+        }
+        if (offsetY < markerViewMargin) {
+            offsetY = markerViewMargin;
         }
         translationX = ObjectAnimator.ofFloat(view, "translationX", offsetX, offsetX);
         translationY = ObjectAnimator.ofFloat(view, "translationY", offsetY, offsetY);
@@ -117,5 +120,12 @@ public class MarkerView extends RelativeLayout {
         animatorSet.setDuration(3);  //设置动画时间
         animatorSet.start(); //启动
         view.setVisibility(VISIBLE);
+    }
+
+    /**
+     * 隐藏MarkerView
+     */
+    public void hide() {
+        view.setVisibility(View.GONE);
     }
 }

@@ -1,7 +1,8 @@
 package com.allen.customergraphview.model;
 
 import android.graphics.Path;
-import android.graphics.Point;
+
+import com.allen.customergraphview.view.Point;
 
 public class Node {
     /**

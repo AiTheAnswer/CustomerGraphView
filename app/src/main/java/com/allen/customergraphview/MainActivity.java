@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.allen.customergraphview.model.NodeGraphModel;
+import com.allen.customergraphview.view.LegendView;
 import com.allen.customergraphview.view.NodeView;
 import com.allen.customergraphview.view.NodeGroup;
 import com.google.gson.Gson;
@@ -12,6 +13,7 @@ public class MainActivity extends AppCompatActivity {
 
     private NodeGraphModel nodeGraphModel;
     private NodeGroup nodeGroup;
+    private LegendView legendView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initView();
         initData();
+        legendView.setData(nodeGraphModel.getFloors());
         nodeGroup.setData(nodeGraphModel);
     }
 
@@ -30,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private void initView() {
         //graphView = findViewById(R.id.graph_view);
         nodeGroup = findViewById(R.id.node_group);
+        legendView = findViewById(R.id.legend_view);
 
     }
 
