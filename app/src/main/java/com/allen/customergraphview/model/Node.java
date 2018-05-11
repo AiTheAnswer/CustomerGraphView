@@ -2,8 +2,6 @@ package com.allen.customergraphview.model;
 
 import android.graphics.Path;
 
-import com.allen.customergraphview.view.Point;
-
 public class Node {
     /**
      * id : Hn_P00012S00448
@@ -23,12 +21,11 @@ public class Node {
     private String category;
     private Object target;
     private Object value;
-    private LineStyle lineStyle;
     //新增绘制图形所需的属性
     //圆的半径
     private float radius;
     //圆的中心点
-    private Point centerPoint;
+    private PointF centerPointF;
     //圆的路径
     private Path path;
     //圆的起始角度
@@ -40,7 +37,7 @@ public class Node {
     //圆的中心点的角度
     private float mCenterAngle;
 
-    public Node(String id, String name, int symbolSize, Object source, String category, Object target, Object value, LineStyle lineStyle) {
+    public Node(String id, String name, int symbolSize, Object source, String category, Object target, Object value) {
         this.id = id;
         this.name = name;
         this.symbolSize = symbolSize;
@@ -48,7 +45,6 @@ public class Node {
         this.category = category;
         this.target = target;
         this.value = value;
-        this.lineStyle = lineStyle;
     }
 
     public String getId() {
@@ -107,13 +103,6 @@ public class Node {
         this.value = value;
     }
 
-    public Object getLineStyle() {
-        return lineStyle;
-    }
-
-    public void setLineStyle(LineStyle lineStyle) {
-        this.lineStyle = lineStyle;
-    }
 
     public float getRadius() {
         return radius;
@@ -123,17 +112,17 @@ public class Node {
         this.radius = radius;
     }
 
-    public Point getCenterPoint() {
-        return centerPoint;
+    public PointF getCenterPointF() {
+        return centerPointF;
     }
 
-    public void setCenterPoint(Point mCenterPoint) {
-        this.centerPoint = mCenterPoint;
+    public void setCenterPointF(PointF mCenterPointF) {
+        this.centerPointF = mCenterPointF;
     }
 
     public Path getPath() {
         path = new Path();
-        path.addCircle(getCenterPoint().x, getCenterPoint().y, getRadius(), Path.Direction.CCW);
+        path.addCircle(getCenterPointF().x, getCenterPointF().y, getRadius(), Path.Direction.CCW);
         return path;
     }
 

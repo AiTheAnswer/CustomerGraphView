@@ -5,31 +5,31 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
 
-import com.allen.customergraphview.model.NodeGraphModel;
+import com.allen.customergraphview.model.NodeLinkModel;
+import com.allen.customergraphview.model.PointF;
 
 /**
  * 节点流程图布局（节点图+ MarkerView）
  *
  * @author Renjy
  */
-public class NodeGroup extends FrameLayout {
+public class NodeLinkGroup extends FrameLayout {
     private Context mContext;
-    private NodeView nodeView;
+    private NodeLinkView nodeLinkView;
     private MarkerView markerView;
     //图例的高度
     private int legendHeight;
 
-    public NodeGroup(Context context) {
+    public NodeLinkGroup(Context context) {
         this(context, null);
     }
 
-    public NodeGroup(Context context, @Nullable AttributeSet attrs) {
+    public NodeLinkGroup(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public NodeGroup(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public NodeLinkGroup(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         this.mContext = context;
         init();
@@ -41,10 +41,10 @@ public class NodeGroup extends FrameLayout {
      */
     private void init() {
         removeAllViews();
-        nodeView = new NodeView(mContext);
+        nodeLinkView = new NodeLinkView(mContext);
         markerView = new MarkerView(mContext);
         markerView.setVisibility(View.GONE);
-        addView(nodeView);
+        addView(nodeLinkView);
         addView(markerView);
     }
 
@@ -54,22 +54,22 @@ public class NodeGroup extends FrameLayout {
      *
      * @param nodeGraphModel 节点流程图的数据
      */
-    public void setData(NodeGraphModel nodeGraphModel) {
-        nodeView.setData(nodeGraphModel);
+    public void setData(NodeLinkModel nodeGraphModel) {
+        nodeLinkView.setData(nodeGraphModel);
         invalidate();
     }
 
     /**
      * 显示MarkerView
      *
-     * @param point      点击的屏幕的位置点
+     * @param pointF      点击的屏幕的位置点
      * @param width      节点图的宽度
      * @param height     节点图的高度
      * @param markerText markerView 要显示的文本
      */
-    public void showMarkView(Point point, int width, int height, String markerText) {
+    public void showMarkView(PointF pointF, int width, int height, String markerText) {
         markerView.setVisibility(View.GONE);
-        markerView.refreshContent(point, width, height, markerText);
+        markerView.refreshContent(pointF, width, height, markerText);
     }
 
     /**

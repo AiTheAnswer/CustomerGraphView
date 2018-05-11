@@ -10,8 +10,8 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.allen.customergraphview.model.Floor;
-import com.allen.customergraphview.model.LineFloor;
+import com.allen.customergraphview.model.Category;
+import com.allen.customergraphview.model.LineLegend;
 import com.allen.customergraphview.utils.DensityUtil;
 
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ public class LegendView extends View {
     private int mHeight;
     private Context mContext;
     //所有行图例的集合
-    private List<LineFloor> mLineFloors;
+    private List<LineLegend> mLineLegends;
     //绘制图例的画笔
     private Paint mLegendPaint;
     //图例之间的间隔
@@ -36,7 +36,7 @@ public class LegendView extends View {
     private float mSingleLegendHeight;
     //图例总高度
     private float mLegendHeight;
-    private List<Floor> mFloors;
+    private List<Category> mCategories;
 
     public LegendView(Context context) {
         this(context, null);
@@ -64,8 +64,8 @@ public class LegendView extends View {
         mLegendPadding = DensityUtil.dip2px(mContext, 40);
     }
 
-    public void setData(List<Floor> data) {
-        mFloors = data;
+    public void setData(List<Category> data) {
+        mCategories = data;
     }
 
     @Override
@@ -82,17 +82,17 @@ public class LegendView extends View {
     private void drawLegend(Canvas canvas) {
         //绘制内容区域
         //canvas.drawRect(rect, mLegendPaint);
-        for (LineFloor lineFloor : mLineFloors) {
-            for (Floor floor : lineFloor.getFloors()) {
-                String name = floor.getName();
-                float padding = lineFloor.getPaddingLeftOrRight();
-                float y = floor.getStartY();
+        for (LineLegend lineLegend : mLineLegends) {
+            for (Category category : lineLegend.getCategories()) {
+                String name = category.getName();
+                float padding = lineLegend.getPaddingLeftOrRight();
+                float y = category.getStartY();
                 int rectColorWith = DensityUtil.dip2px(mContext, 10);
-                RectF rectColor = new RectF(padding + rectColorWith + floor.getStartX(), y - rectColorWith, padding + rectColorWith + floor.getStartX() + rectColorWith, y);
-                mLegendPaint.setColor(Color.parseColor(floor.getColor()));
+                RectF rectColor = new RectF(padding + rectColorWith + category.getStartX(), y - rectColorWith, padding + rectColorWith + category.getStartX() + rectColorWith, y);
+                mLegendPaint.setColor(Color.parseColor(category.getColor()));
                 canvas.drawRect(rectColor, mLegendPaint);
                 mLegendPaint.setColor(Color.BLACK);
-                canvas.drawText(name, padding + rectColorWith * 3 + floor.getStartX(), y, mLegendPaint);
+                canvas.drawText(name, padding + rectColorWith * 3 + category.getStartX(), y, mLegendPaint);
             }
 
         }
@@ -115,41 +115,41 @@ public class LegendView extends View {
      */
     private void calculateLegend() {
         float dp15 = DensityUtil.dip2px(mContext, 15);
-        if (null != mFloors) {
-            mLineFloors = new ArrayList<>();
-            LineFloor wrapLine = new LineFloor();
+        if (null != mCategories) {
+            mLineLegends = new ArrayList<>();
+            LineLegend wrapLine = new LineLegend();
 
             float mLegendSumWidth = 0;
             int line = 0;
-            for (Floor floor : mFloors) {
+            for (Category category : mCategories) {
                 Rect rect = new Rect();
-                mLegendPaint.getTextBounds(floor.getName(), 0, floor.getName().length(), rect);
+                mLegendPaint.getTextBounds(category.getName(), 0, category.getName().length(), rect);
                 float width = rect.width() + mLegendPadding;
                 float height = rect.height();
                 if (wrapLine.getRowContentWidth() + width <= mWidth - dp15 * 2) {
-                    floor.setLine(line);
-                    floor.setStartX(mLegendSumWidth);
-                    floor.setStartY(mSingleLegendHeight * line + height + (mSingleLegendHeight - height) / 2);
-                    floor.setWidth(width);
-                    wrapLine.addFloor(floor);
+                    category.setLine(line);
+                    category.setStartX(mLegendSumWidth);
+                    category.setStartY(mSingleLegendHeight * line + height + (mSingleLegendHeight - height) / 2);
+                    category.setWidth(width);
+                    wrapLine.addFloor(category);
                 } else {
-                    mLineFloors.add(wrapLine);
+                    mLineLegends.add(wrapLine);
                     line++;
                     mLegendSumWidth = 0;
-                    floor.setLine(line);
-                    floor.setStartX(mLegendSumWidth);
-                    floor.setStartY(mSingleLegendHeight * line + height + (mSingleLegendHeight - height) / 2);
-                    floor.setWidth(width);
-                    wrapLine = new LineFloor();
-                    wrapLine.addFloor(floor);
+                    category.setLine(line);
+                    category.setStartX(mLegendSumWidth);
+                    category.setStartY(mSingleLegendHeight * line + height + (mSingleLegendHeight - height) / 2);
+                    category.setWidth(width);
+                    wrapLine = new LineLegend();
+                    wrapLine.addFloor(category);
                 }
-                floor.setLineLegendHeight(mSingleLegendHeight);
+                category.setLineLegendHeight(mSingleLegendHeight);
                 mLegendSumWidth += width;
             }
-            mLineFloors.add(wrapLine);
+            mLineLegends.add(wrapLine);
             mLegendHeight = mSingleLegendHeight * (line + 1);
-            for (LineFloor lineFloor : mLineFloors) {
-                lineFloor.setPaddingLeftOrRight((mWidth - lineFloor.getRowContentWidth()) / 2);
+            for (LineLegend lineLegend : mLineLegends) {
+                lineLegend.setPaddingLeftOrRight((mWidth - lineLegend.getRowContentWidth()) / 2);
             }
         }
 

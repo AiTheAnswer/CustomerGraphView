@@ -5,7 +5,7 @@ package com.allen.customergraphview.model;
  *
  * @author Renjy
  */
-public class Floor {
+public class Category {
     /**
      * name : 4F
      */
@@ -25,7 +25,7 @@ public class Floor {
     //图例的高度
     private float height;
 
-    public Floor(String name) {
+    public Category(String name) {
         this.name = name;
     }
 

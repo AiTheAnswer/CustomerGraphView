@@ -11,7 +11,6 @@ public class Link {
      * category : null
      * target : Hn_P00012S00285
      * value : 99.99%
-     * lineStyle : {"width":24}
      */
 
     private Object id;
@@ -21,7 +20,6 @@ public class Link {
     private String category;
     private String target;
     private String value;
-    private LineStyle lineStyle;
     //连接线的路径
     private Path linePath;
     //连接线区域的路径
@@ -81,14 +79,6 @@ public class Link {
 
     public void setValue(String value) {
         this.value = value;
-    }
-
-    public LineStyle getLineStyle() {
-        return lineStyle;
-    }
-
-    public void setLineStyle(LineStyle lineStyle) {
-        this.lineStyle = lineStyle;
     }
 
     public Path getLinePath() {

@@ -6,24 +6,22 @@ import java.util.List;
 /**
  * 同一行的图例集合
  */
-public class LineFloor {
+public class LineLegend {
     //一行图例的集合
-    private List<Floor> floors = new ArrayList<>();
+    private List<Category> categories = new ArrayList<>();
     //行内容的宽度
     private int rowContentWidth;
     //左右两边的间隔
     private float mPaddingLeftOrRight;
 
-
-
     /**
      * 添加图例
      *
-     * @param floor 图例
+     * @param category 图例
      */
-    public void addFloor(Floor floor) {
-        rowContentWidth += floor.getWidth();
-        floors.add(floor);
+    public void addFloor(Category category) {
+        rowContentWidth += category.getWidth();
+        categories.add(category);
     }
 
     /**
@@ -43,7 +41,7 @@ public class LineFloor {
         this.mPaddingLeftOrRight = paddingLeftOrRight;
     }
 
-    public List<Floor> getFloors() {
-        return floors;
+    public List<Category> getCategories() {
+        return categories;
     }
 }

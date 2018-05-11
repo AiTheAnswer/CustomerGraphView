@@ -9,6 +9,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.allen.customergraphview.R;
+import com.allen.customergraphview.model.PointF;
 import com.allen.customergraphview.utils.DensityUtil;
 
 /**
@@ -51,7 +52,7 @@ public class MarkerView extends RelativeLayout {
      * 添加默认的MarkerView布局
      */
     private void setupLayoutResource() {
-        view = LayoutInflater.from(mContext).inflate(R.layout.marker_view, this);
+        view = LayoutInflater.from(mContext).inflate(R.layout.node_link_marker_view, this);
         titleTV = findViewById(R.id.marker_x_value);
         contentTV = findViewById(R.id.marker_content);
         view.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
@@ -69,13 +70,13 @@ public class MarkerView extends RelativeLayout {
      * @param width    节点图的宽度
      * @param height   节点图的高度
      */
-    public void refreshContent(final Point point, final int width, final int height, String markText) {
+    public void refreshContent(final PointF pointF, final int width, final int height, String markText) {
         if (null != titleTV) {
             titleTV.setText(markText);
         }
         this.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
         this.layout(0, 0, this.getMeasuredWidth(), this.getMeasuredHeight());
-        moveMarkerView(point, width, height);
+        moveMarkerView(pointF, width, height);
 
 
     }
@@ -83,28 +84,28 @@ public class MarkerView extends RelativeLayout {
     /**
      * 使用属性动画移动MarkerView到点击点
      *
-     * @param point  点击的点
+     * @param pointF  点击的点
      * @param width  View的宽度
      * @param height View的高度
      */
-    private void moveMarkerView(Point point, int width, int height) {
+    private void moveMarkerView(PointF pointF, int width, int height) {
         float offsetX;
         float offsetY;
         int measuredWidth = this.getMeasuredWidth();
         int measuredHeight = this.getMeasuredHeight();
         int markerViewMargin = DensityUtil.dip2px(mContext, 5);
         //计算x轴的偏移量
-        if (point.x + measuredWidth > width - markerViewMargin) {//判断markerView的右边
-            offsetX = (int) (point.x - measuredWidth);
+        if (pointF.x + measuredWidth > width - markerViewMargin) {//判断markerView的右边
+            offsetX = (int) (pointF.x - measuredWidth);
         } else {
-            offsetX = (int) point.x;
+            offsetX = (int) pointF.x;
         }
 
         //计算y轴的偏移量
-        if (point.y < (measuredHeight / 2 + markerViewMargin)) {//计算上边
+        if (pointF.y < (measuredHeight / 2 + markerViewMargin)) {//计算上边
             offsetY = markerViewMargin;
-        } else if ((point.y + measuredHeight / 2) < (height - markerViewMargin)) {//计算下边
-            offsetY = (int) (point.y - measuredHeight / 2);
+        } else if ((pointF.y + measuredHeight / 2) < (height - markerViewMargin)) {//计算下边
+            offsetY = (int) (pointF.y - measuredHeight / 2);
         } else {
             offsetY = height - markerViewMargin - measuredHeight;
         }

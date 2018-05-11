@@ -3,16 +3,15 @@ package com.allen.customergraphview;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import com.allen.customergraphview.model.NodeGraphModel;
+import com.allen.customergraphview.model.NodeLinkModel;
 import com.allen.customergraphview.view.LegendView;
-import com.allen.customergraphview.view.NodeView;
-import com.allen.customergraphview.view.NodeGroup;
+import com.allen.customergraphview.view.NodeLinkGroup;
 import com.google.gson.Gson;
 
 public class MainActivity extends AppCompatActivity {
 
-    private NodeGraphModel nodeGraphModel;
-    private NodeGroup nodeGroup;
+    private NodeLinkModel nodeGraphModel;
+    private NodeLinkGroup nodeLinkGroup;
     private LegendView legendView;
 
     @Override
@@ -21,18 +20,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initView();
         initData();
-        legendView.setData(nodeGraphModel.getFloors());
-        nodeGroup.setData(nodeGraphModel);
+        legendView.setData(nodeGraphModel.getCategories());
+        nodeLinkGroup.setData(nodeGraphModel);
     }
 
     private void initData() {
         Gson gson = new Gson();
-        nodeGraphModel = gson.fromJson(graphData, NodeGraphModel.class);
+        nodeGraphModel = gson.fromJson(graphData, NodeLinkModel.class);
     }
 
     private void initView() {
         //graphView = findViewById(R.id.graph_view);
-        nodeGroup = findViewById(R.id.node_group);
+        nodeLinkGroup = findViewById(R.id.node_group);
         legendView = findViewById(R.id.legend_view);
 
     }

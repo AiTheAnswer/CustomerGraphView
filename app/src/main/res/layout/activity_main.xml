@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <com.allen.customergraphview.view.NodeGroup
+    <com.allen.customergraphview.view.NodeLinkGroup
         android:id="@+id/node_group"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

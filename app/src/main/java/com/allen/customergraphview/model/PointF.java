@@ -1,4 +1,5 @@
-package com.allen.customergraphview.view;
+package com.allen.customergraphview.model;
+
 
 /**
  * 屏幕上点对象实体类
@@ -6,19 +7,19 @@ package com.allen.customergraphview.view;
  *
  * @author Renjy
  */
-public class Point {
+public class PointF {
     public float x;
     public float y;
 
-    public Point() {
+    public PointF() {
     }
 
-    public Point(float x, float y) {
+    public PointF(float x, float y) {
         this.x = x;
         this.y = y;
     }
 
-    public Point(Point src) {
+    public PointF(PointF src) {
         this.x = src.x;
         this.y = src.y;
     }

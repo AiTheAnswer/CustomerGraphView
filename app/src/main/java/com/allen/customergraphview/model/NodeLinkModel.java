@@ -7,22 +7,21 @@ import java.util.List;
  *
  * @author Renjy
  */
-public class NodeGraphModel {
+public class NodeLinkModel {
 
-    private List<Floor> floors;
+    private List<Category> floors;
     private List<Node> nodes;
-    private List<Label> labels;
     private List<Link> links;
     //比重之和
     private int mWeightSum;
     //最大的比重
     private int mMaxWeight;
 
-    public List<Floor> getFloors() {
+    public List<Category> getCategories() {
         return floors;
     }
 
-    public void setFloors(List<Floor> floors) {
+    public void setCategories(List<Category> floors) {
         this.floors = floors;
     }
 
@@ -34,13 +33,6 @@ public class NodeGraphModel {
         this.nodes = nodes;
     }
 
-    public List<Label> getLabels() {
-        return labels;
-    }
-
-    public void setLabels(List<Label> labels) {
-        this.labels = labels;
-    }
 
     public List<Link> getLinks() {
         return links;
