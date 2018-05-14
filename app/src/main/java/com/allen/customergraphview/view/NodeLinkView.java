@@ -14,8 +14,8 @@ import android.util.Log;
 import android.view.MotionEvent;
 
 import com.allen.customergraphview.model.Category;
+import com.allen.customergraphview.model.Label;
 import com.allen.customergraphview.model.NodeLinkModel;
-import com.allen.customergraphview.model.Link;
 import com.allen.customergraphview.model.Node;
 import com.allen.customergraphview.model.PointF;
 import com.allen.customergraphview.utils.NodeLinkUtil;
@@ -158,6 +158,7 @@ public class NodeLinkView extends ScaleView {
         mLegendTextPaint.setTextSize(Math.max(mLegendTextSize / scale, 1));
         List<Node> nodes = mNodeGraphModel.getNodes();
         float previousSweepAngle = 3;
+        float previousCenterAngle = 0;
         float sweepAngleSum = 0;
         float rotate = 0;
         boolean isFirst = true;
@@ -177,7 +178,7 @@ public class NodeLinkView extends ScaleView {
 
             } else if (isFirst) {//左半圆区域第一个
                 canvas.rotate(-rotate, mCenterPointF.x, mCenterPointF.y);
-                canvas.rotate(-93, mCenterPointF.x, mCenterPointF.y);
+                canvas.rotate(previousCenterAngle - 1.5f  - 180, mCenterPointF.x, mCenterPointF.y);
                 canvas.rotate((sweepAngle + previousSweepAngle) / 2, mCenterPointF.x, mCenterPointF.y);
 
                 canvas.drawText(node.getName(), rectF.left + mLegendMaxTextLength + (mAllowMaxCircleRadius - node.getRadius()) - textRect.right, mCenterPointF.y, mLegendTextPaint);
@@ -189,6 +190,7 @@ public class NodeLinkView extends ScaleView {
             }
             rotate += (sweepAngle + previousSweepAngle) / 2;
             previousSweepAngle = sweepAngle;
+            previousCenterAngle = node.getCenterAngle();
         }
     }
 
@@ -215,14 +217,14 @@ public class NodeLinkView extends ScaleView {
      * @param canvas 画布
      */
     private void drawLinkLine(Canvas canvas) {
-        List<Link> links = mNodeGraphModel.getLinks();
-        for (Link link : links) {
-            Node sourceNode = getNodeFormId(link.getSource());
-            Node targetNode = getNodeFormId(link.getTarget());
+        List<Label> labels = mNodeGraphModel.getLabels();
+        for (Label label : labels) {
+            Node sourceNode = getNodeFormId(label.getSourceShopId());
+            Node targetNode = getNodeFormId(label.getTargetShopId());
             if (null == sourceNode || null == targetNode) {
                 return;
             }
-            Path linePath = link.getLinePath();
+            Path linePath = label.getLinePath();
             String color = getFloorColor(sourceNode.getCategory());
             mLinkLinePaint.setColor(Color.parseColor(color));
             canvas.drawPath(linePath, mLinkLinePaint);
@@ -342,11 +344,11 @@ public class NodeLinkView extends ScaleView {
             nodeLinkGroup.showMarkView(pointF, mWidth, mHeight, node.getName());
             return;
         }
-        Link link = inLinkLine(pointFToScaleCanvas);
-        if (link != null) {
-            Node sourceNode = getNodeFormId(link.getSource());
-            Node targetNode = getNodeFormId(link.getTarget());
-            nodeLinkGroup.showMarkView(pointF, mWidth, mHeight, sourceNode.getName() + " > " + targetNode.getName() + " " + link.getValue());
+        Label label = inLinkLine(pointFToScaleCanvas);
+        if (label != null) {
+            Node sourceNode = getNodeFormId(label.getSourceShopId());
+            Node targetNode = getNodeFormId(label.getTargetShopId());
+            nodeLinkGroup.showMarkView(pointF, mWidth, mHeight, sourceNode.getName() + " > " + targetNode.getName() + " " + label.getCorrelationDegree());
             return;
         }
         nodeLinkGroup.hideMarkerView();
@@ -371,11 +373,11 @@ public class NodeLinkView extends ScaleView {
      *
      * @param pointF 点击点
      */
-    private Link inLinkLine(PointF pointF) {
-        List<Link> links = mNodeGraphModel.getLinks();
-        for (Link link : links) {
-            if (pointInPath(link.getLinkPath(), pointF)) {
-                return link;
+    private Label inLinkLine(PointF pointF) {
+        List<Label> labels = mNodeGraphModel.getLabels();
+        for (Label label : labels) {
+            if (pointInPath(label.getLinkPath(), pointF)) {
+                return label;
             }
         }
         return null;
@@ -400,7 +402,7 @@ public class NodeLinkView extends ScaleView {
     /**
      * 判断点击点是否在某个路径内
      *
-     * @param path  路径
+     * @param path   路径
      * @param pointF 所要判断的点
      * @return true 在路径内 false 不在路径内
      */

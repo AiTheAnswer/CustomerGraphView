@@ -11,7 +11,7 @@ public class NodeLinkModel {
 
     private List<Category> floors;
     private List<Node> nodes;
-    private List<Link> links;
+    private List<Label> labels;
     //比重之和
     private int mWeightSum;
     //最大的比重
@@ -34,12 +34,12 @@ public class NodeLinkModel {
     }
 
 
-    public List<Link> getLinks() {
-        return links;
+    public List<Label> getLabels() {
+        return labels;
     }
 
-    public void setLinks(List<Link> links) {
-        this.links = links;
+    public void setLabels(List<Label> labels) {
+        this.labels = labels;
     }
 
     public int getmWeightSum() {

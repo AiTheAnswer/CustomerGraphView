@@ -3,8 +3,8 @@ package com.allen.customergraphview.utils;
 import android.graphics.Path;
 
 import com.allen.customergraphview.model.Category;
+import com.allen.customergraphview.model.Label;
 import com.allen.customergraphview.model.NodeLinkModel;
-import com.allen.customergraphview.model.Link;
 import com.allen.customergraphview.model.Node;
 import com.allen.customergraphview.model.PointF;
 
@@ -93,12 +93,11 @@ public class NodeLinkUtil {
      * 计算连接线和连接线点击有效区域的路径
      */
     private static void calculateLinkPaths(NodeLinkModel nodeGraphModel, float rectMaxRadius, PointF centerPointF) {
-        List<Link> links = nodeGraphModel.getLinks();
-        // for (Link link : links) {
-        for (int i = 0; i < links.size(); i++) {
-            Link link = links.get(i);
-            Node sourceNode = getNodeFormId(nodeGraphModel, link.getSource());
-            Node targetNode = getNodeFormId(nodeGraphModel, link.getTarget());
+        List<Label> labels = nodeGraphModel.getLabels();
+        for (int i = 0; i < labels.size(); i++) {
+            Label link = labels.get(i);
+            Node sourceNode = getNodeFormId(nodeGraphModel, link.getSourceShopId());
+            Node targetNode = getNodeFormId(nodeGraphModel, link.getTargetShopId());
             if (null == sourceNode || null == targetNode) {
                 return;
             }
